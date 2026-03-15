@@ -1,0 +1,18 @@
+[
+    {
+        "file_name": "68ff547a91d16_test.jpg",
+        "original_name": "test.jpg",
+        "comment": "тест",
+        "type": "jpg",
+        "upload_date": "2025-10-27 11:16:10",
+        "class_type": "PhotoUploader"
+    },
+    {
+        "file_name": "68ff548a85027_test.jpg",
+        "original_name": "test.jpg",
+        "comment": "Кто я?",
+        "type": "jpg",
+        "upload_date": "2025-10-27 11:16:26",
+        "class_type": "PhotoUploader"
+    }
+]

@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  apache-php:
+    build: .
+    container_name: lab1-apache-php
+    volumes:
+      - ./www:/var/www/html
+    ports:
+      - "8080:80"
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+    networks:
+      - lab1-network
+
+  # Если нужна БД для других задач
+  db:
+    image: mysql:8.0
+    container_name: lab1-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: lab1_db
+      MYSQL_USER: phpuser
+      MYSQL_PASSWORD: phppass
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - lab1-network
+    profiles: ["database"]  # Добавляет БД только если явно запустить с --profile database
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: lab1-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+    depends_on:
+      - db
+    networks:
+      - lab1-network
+    profiles: ["database"]  # Тоже только по профилю
+
+volumes:
+  db_data:
+
+networks:
+  lab1-network:
+    driver: bridge
