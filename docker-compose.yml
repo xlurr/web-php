@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   apache-php:
-    image: php:8.2-apache
+    build: .
     container_name: apache-php
     volumes:
       - ./www:/var/www/html
@@ -10,7 +10,6 @@ services:
       - "8080:80"
     depends_on:
       - db
-    command: bash -c "docker-php-ext-install mysqli && apache2-foreground"
 
   db:
     image: mysql:8.0

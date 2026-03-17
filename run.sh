@@ -1,3 +1,59 @@
+#!/bin/bash
+
+echo "🚀 Начинаем применение исправлений..."
+
+# 1. Обновление docker-compose.yml
+cat << 'EOF' > docker-compose.yml
+version: '3.9'
+
+services:
+  apache-php:
+    build: .
+    container_name: apache-php
+    volumes:
+      - ./www:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: db
+      MYSQL_USER: phpuser
+      MYSQL_PASSWORD: phppass
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+EOF
+echo "✅ docker-compose.yml обновлен"
+
+# 2. Создание Dockerfile
+cat << 'EOF' > Dockerfile
+FROM php:8.2-apache
+RUN docker-php-ext-install mysqli pdo pdo_mysql && a2enmod rewrite
+EOF
+echo "✅ Dockerfile создан"
+
+# 3. Создание www/index.php
+cat << 'EOF' > www/index.php
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -120,3 +176,55 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+EOF
+echo "✅ www/index.php обновлен"
+
+# 4. Обновление подключений к БД
+DB_FILES=(
+    "www/lab5/students-facultets/config/database.php"
+    "www/lab6/simple_shop_mvc/config/database.php"
+    "www/lab7/simple_shop_mvc+edit+session_registr/config/database.php"
+    "www/lab8/simple_shop_mvc+edit+session_registr+api/config/database.php"
+    "www/lab8/simple_shop_mvc+edit+session_registr+api/client/config.php"
+    "www/lab9/simple_shop_mvc+edit+session_registr+api+jwt_token/config/database.php"
+)
+
+for file in "${DB_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        sed -i "s/define('DB_HOST', '[^']*');/define('DB_HOST', 'db');/g" "$file"
+        sed -i "s/define('DB_NAME', '[^']*');/define('DB_NAME', 'db');/g" "$file"
+        sed -i "s/define('DB_USER', '[^']*');/define('DB_USER', 'root');/g" "$file"
+        sed -i "s/define('DB_USERNAME', '[^']*');/define('DB_USERNAME', 'root');/g" "$file"
+        sed -i "s/define('DB_PASS', '[^']*');/define('DB_PASS', 'rootpass');/g" "$file"
+        sed -i "s/define('DB_PASSWORD', '[^']*');/define('DB_PASSWORD', 'rootpass');/g" "$file"
+        echo "✅ Обновлен $file"
+    fi
+done
+
+# Обновление модели клиента в 8 лабе
+CLIENT_MODEL="www/lab8/simple_shop_mvc+edit+session_registr+api/client/models/Client.php"
+if [ -f "$CLIENT_MODEL" ]; then
+    sed -i "s/new mysqli('localhost', 'root', '', 'myshop')/new mysqli('db', 'root', 'rootpass', 'db')/g" "$CLIENT_MODEL"
+    echo "✅ Обновлен $CLIENT_MODEL"
+fi
+
+# 5. Обновление API URL
+SEARCH_8="www/lab8/simple_shop_mvc+edit+session_registr+api/search_product.php"
+if [ -f "$SEARCH_8" ]; then
+    sed -i "s|http://127.0.0.1/simple_shop_mvc+edit+session_registr+api/index.php|index.php|g" "$SEARCH_8"
+    echo "✅ Обновлен $SEARCH_8"
+fi
+
+SEARCH_9="www/lab9/simple_shop_mvc+edit+session_registr+api+jwt_token/search_product.php"
+if [ -f "$SEARCH_9" ]; then
+    sed -i "s|http://127.0.0.1/simple_shop_mvc+edit+session_registr+api/index.php|index.php|g" "$SEARCH_9"
+    echo "✅ Обновлен $SEARCH_9"
+fi
+
+API_CLIENT_9="www/lab9/simple_shop_mvc+edit+session_registr+api+jwt_token/api_client.php"
+if [ -f "$API_CLIENT_9" ]; then
+    sed -i "s|http://127.0.0.1/simple_shop_mvc+edit+session_registr+api+jwt_token|http://localhost:8080/lab9/simple_shop_mvc+edit+session_registr+api+jwt_token|g" "$API_CLIENT_9"
+    echo "✅ Обновлен $API_CLIENT_9"
+fi
+
+echo "🎉 Все изменения успешно применены!"
