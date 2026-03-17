@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.8'
 
 services:
   apache-php:
@@ -14,14 +14,16 @@ services:
   db:
     image: mysql:8.0
     container_name: mysql
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: db
-      MYSQL_USER: phpuser
-      MYSQL_PASSWORD: phppass
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=db
+      - MYSQL_USER=phpuser
+      - MYSQL_PASSWORD=phppass
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -29,9 +31,9 @@ services:
     ports:
       - "8081:80"
     environment:
-      PMA_HOST: db
-      PMA_USER: root
-      PMA_PASSWORD: rootpass
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpass
     depends_on:
       - db
 
